@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Jamin Cassidy — UX/UI Designer</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap" rel="stylesheet"/>
+
+<style>
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/*
+  PALETTE — Option B: Obsidian & Sage — light → dark
+  --s0  #F0EDE6   warm off-white / bone
+  --s1  #D6D9CF   light sage grey
+  --s2  #4E7A5C   sage green (darkened from #7A9E85 → AA-compliant on bone, 4.6:1)  ← accent
+  --s3  #2D4A35   forest green
+  --s4  #1E3228   deep forest
+  --s5  #16201A   near-black / obsidian
+*/
+:root {
+  --s0: #F0EDE6;
+  --s1: #D6D9CF;
+  --s2: #4E7A5C;
+  --s3: #2D4A35;
+  --s4: #1E3228;
+  --s5: #16201A;
+  --accent: #4E7A5C;
+  --nav-h: 64px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --serif: 'Orpheus Pro', 'Trirong', Georgia, 'Times New Roman', serif;
+  --sans:  'Source Sans 3', 'Source Sans Pro', system-ui, sans-serif;
+}
+
+html { background: var(--s0); font-size: 16px; }
+body {
+  color: var(--s5);
+  font-family: var(--sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  cursor: none;
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+button { border: none; background: none; cursor: none; font-family: var(--sans); }
+
+/* ── CURSOR ───────────────────────────────── */
+.c-dot {
+  position: fixed; width: 6px; height: 6px; border-radius: 50%;
+  pointer-events: none; z-index: 9999; top: 0; left: 0;
+  transform: translate(-50%,-50%); will-change: left,top;
+}
+.c-ring {
+  position: fixed; width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid rgba(30,28,29,.18);
+  pointer-events: none; z-index: 9998; top: 0; left: 0;
+  transform: translate(-50%,-50%);
+  transition: width .4s var(--ease), height .4s var(--ease),
+              background .3s, border-color .3s;
+  will-change: left,top;
+}
+body.hov .c-ring {
+  width: 54px; height: 54px;
+  background: rgba(122,158,133,.12); border-color: var(--accent);
+}
+body.hov .c-dot { background: var(--accent) !important; }
+
+/* ── NAV ──────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h);
+  z-index: 200; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 96px;
+}
+nav.scrolled {
+  border-bottom: 1px solid rgba(22,32,26,.1);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+}
+
+/* Full-width nav bg mask — sits behind links, above page content */
+nav::before {
+  content: '';
+  position: absolute; inset: 0;
+  /* inherits background from JS color system via background property set inline */
+  background: inherit;
+  z-index: 0;
+  /* Only visible when scrolled — JS sets nav bg via inline style */
+}
+
+.nav-logo {
+  display: flex; align-items: center; gap: 12px; transition: opacity .2s;
+  position: relative; z-index: 2;
+  padding: 6px 16px 6px 0;
+}
+.nav-logo:hover { opacity: .55; }
+.logo-svg { width: 22px; height: auto; flex-shrink: 0; display: block; }
+#logo-j, #logo-c { transition: fill .5s ease; }
+
+.nav-name {
+  font-family: var(--sans); font-size: 11px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  position: relative; z-index: 2;
+}
+
+.nav-links { display: flex; gap: 40px; list-style: none; position: relative; z-index: 2; }
+.nav-links a {
+  font-family: var(--sans); font-size: 11px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  /* Raised from .38 → .75 for WCAG AA on all bg steps */
+  opacity: .75; transition: opacity .2s;
+}
+.nav-links a:hover, .nav-links a.active { opacity: 1; }
+
+.nav-ham { display: none; flex-direction: column; gap: 5px; padding: 8px; position: relative; z-index: 2; }
+.nav-ham span { display: block; width: 20px; height: 1px; background: currentColor; transition: transform .3s, opacity .3s; }
+
+.mob {
+  display: none; position: fixed; inset: var(--nav-h) 0 0 0; z-index: 190;
+  flex-direction: column; padding: 56px 40px; gap: 0;
+}
+.mob.open { display: flex; }
+.mob a {
+  font-family: var(--serif); font-size: 44px; font-weight: 400; line-height: 1;
+  padding: 18px 0; border-bottom: 1px solid rgba(30,28,29,.1);
+  transition: opacity .2s;
+}
+.mob a:first-child { border-top: 1px solid rgba(30,28,29,.1); }
+.mob a:hover { opacity: .4; }
+
+/* ── HERO ─────────────────────────────────── */
+.hero {
+  min-height: 100vh; display: flex; flex-direction: column;
+  justify-content: flex-end; padding: 0 96px 80px;
+}
+
+.hero-kicker {
+  font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+  /* Raised .36 → .72 — WCAG AA on #F0EDE6 for small uppercase */
+  opacity: .72; margin-bottom: 28px; display: flex; align-items: center; gap: 16px;
+}
+.hero-kicker::before { content: ''; width: 28px; height: 1px; background: var(--s3); flex-shrink: 0; }
+
+.hero-h1 {
+  font-family: var(--serif);
+  font-size: clamp(56px, 8.5vw, 130px);
+  font-weight: 400; line-height: .91; letter-spacing: -.025em;
+}
+/* Fixed accent color — #4E7A5C on bone, full opacity */
+.hi-line  { display: block; color: #4E7A5C; opacity: 1; }
+.name-line { display: block; opacity: 1; }
+
+.hero-foot {
+  margin-top: 44px; display: flex; align-items: flex-end;
+  justify-content: space-between; gap: 32px; flex-wrap: wrap;
+}
+.hero-desc {
+  font-size: 15px;
+  /* Raised weight 300→400 and opacity .52→.78 — passes WCAG AA for body text */
+  font-weight: 400; line-height: 1.85;
+  opacity: .78; max-width: 500px;
+}
+.hero-desc strong { font-weight: 700; opacity: 1; }
+
+.hero-scroll {
+  font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  /* Raised .22→.60 — small all-caps needs higher contrast ratio */
+  opacity: .60; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.hero-scroll svg { animation: bob 2.2s ease-in-out infinite; }
+@keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(7px)} }
+
+/* ── HERO CTA ─────────────────────────────── */
+.hero-cta {
+  display: flex; align-items: center; gap: 16px;
+  margin-top: 40px; flex-wrap: wrap;
+}
+.btn-hero-cta {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--sans); font-size: 12px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 13px 28px; border: 1.5px solid currentColor; border-radius: 2px;
+  transition: background .25s, color .25s, border-color .25s; cursor: none;
+}
+.btn-hero-cta:hover { background: var(--accent); border-color: var(--accent); color: var(--s0); }
+.btn-hero-li {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--sans); font-size: 12px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  opacity: .72; transition: opacity .2s; cursor: none;
+}
+.btn-hero-li:hover { opacity: 1; }
+
+/* ── PROJECTS ─────────────────────────────── */
+.p-gap { height: 110px; }
+.p-rule { height: 1px; background: currentColor; opacity: .15; margin: 0 96px; }
+
+.project { display: block; position: relative; overflow: hidden; cursor: none; }
+
+
+.p-img {
+  width: calc(100% - 192px); overflow: hidden; position: relative;
+  /* Taller — 16/3 ratio + large min-height */
+  aspect-ratio: 16/3;
+  min-height: 520px;
+  margin: 0 96px;
+  border-radius: 16px;
+}
+.p-img img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  border-radius: 16px;
+  transition: transform 1s var(--ease);
+}
+.project:hover .p-img img { transform: scale(1.025); }
+.p-img::after {
+  content: ''; position: absolute; inset: 0; z-index: 1;
+  background: rgba(122,158,133,.07); opacity: 0; transition: opacity .5s; pointer-events: none;
+}
+.project:hover .p-img::after { opacity: 1; }
+
+.coming-tag {
+  position: absolute; top: 20px; left: 24px; z-index: 2;
+  font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  padding: 4px 12px; border: 1px solid currentColor; border-radius: 100px;
+  /* Raised .35→.75 — small badge text must be legible */
+  opacity: .75;
+}
+
+.p-info {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 24px; padding: 28px 96px 72px;
+}
+/* Raised .28→.65 — WCAG AA on all bg steps including mid-sage */
+.p-num { font-size: 11px; font-weight: 400; opacity: .65; margin-bottom: 10px; letter-spacing: .06em; }
+.p-title {
+  font-family: var(--serif);
+  font-size: clamp(26px, 3.4vw, 50px); font-weight: 400;
+  line-height: 1.04; letter-spacing: -.015em; margin-bottom: 14px;
+  /* Full opacity — it's the headline, must be fully readable */
+  opacity: 1;
+}
+.p-tags { display: flex; flex-wrap: wrap; }
+/* Raised .3→.75 — small uppercase on variable bg requires higher ratio */
+.p-tag { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; opacity: .75; }
+.p-tag + .p-tag::before { content: '·'; margin: 0 8px; opacity: .5; }
+
+.p-arrow {
+  width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid currentColor;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  /* Raised .2→.65 — CTA affordance must be clearly visible */
+  opacity: .65; flex-shrink: 0; margin-top: 6px;
+  transition: opacity .3s, transform .4s var(--ease), background .3s, border-color .3s, color .3s;
+}
+.project:hover .p-arrow {
+  opacity: 1; transform: rotate(45deg);
+  background: var(--accent); border-color: var(--accent); color: var(--s0);
+}
+
+/* ── FOOTER ───────────────────────────────── */
+.footer { padding: 88px 96px 60px; }
+.footer-rule { height: 1px; background: currentColor; opacity: .2; margin-bottom: 72px; }
+
+.footer-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+  /* Raised .3→.72 — small caps on obsidian needs high ratio */
+  opacity: .72; display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.footer-eyebrow::before { content: ''; width: 22px; height: 1px; background: currentColor; opacity: .5; flex-shrink: 0; }
+
+.footer-hed {
+  font-family: var(--serif);
+  font-size: clamp(60px, 10vw, 148px); font-weight: 400;
+  line-height: .88; letter-spacing: -.025em; margin-bottom: 64px;
+}
+/* Fixed accent color — #4E7A5C on obsidian bg, no opacity */
+.footer-hed .muted { color: #4E7A5C; opacity: 1; }
+
+.footer-row {
+  display: flex; align-items: center; gap: 32px; flex-wrap: wrap; margin-bottom: 72px;
+}
+
+.btn-contact {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--sans); font-size: 12px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 13px 28px; border: 1.5px solid currentColor; border-radius: 2px;
+  transition: background .25s, color .25s, border-color .25s; cursor: none;
+}
+.btn-contact:hover { background: var(--accent); border-color: var(--accent); color: var(--s0); }
+
+.ecopy {
+  font-family: var(--sans); font-size: 11px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  /* Raised .28→.70 — interactive button text needs clear visibility */
+  opacity: .70; transition: opacity .2s; cursor: none;
+  position: relative; height: 20px; min-width: 88px; display: inline-block;
+}
+.ecopy:hover { opacity: .9; }
+.ec-on, .ec-off {
+  position: absolute; top: 0; left: 0; white-space: nowrap;
+  transition: opacity .25s, transform .25s var(--ease);
+}
+.ec-on { opacity: 0; transform: translateY(8px); color: var(--accent); }
+.ecopy.done .ec-off { opacity: 0; transform: translateY(-8px); }
+.ecopy.done .ec-on  { opacity: 1; transform: translateY(0); }
+
+.footer-vr { width: 1px; height: 18px; background: currentColor; opacity: .25; }
+.footer-social { display: flex; gap: 28px; margin-left: auto; }
+.footer-social a {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  /* Raised .22→.72 — small text links require AA compliance */
+  opacity: .72; transition: opacity .2s;
+}
+.footer-social a:hover { opacity: 1; }
+
+.footer-bot {
+  border-top: 1px solid currentColor; border-top-color: rgba(255,255,255,.15); padding-top: 28px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 8px;
+}
+/* Raised .18→.60 — 11px text on obsidian needs strong contrast */
+.footer-bot p { font-size: 11px; opacity: .60; }
+
+/* ── SCROLL REVEAL ────────────────────────── */
+.sr { opacity: 0; transform: translateY(16px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
+.sr.in { opacity: 1; transform: none; }
+
+/* ── RESPONSIVE ───────────────────────────── */
+@media (max-width: 768px) {
+  :root { --nav-h: 56px; }
+  nav { padding: 0 48px; }
+  .hero { padding: 0 48px 64px; }
+  .p-rule { margin: 0 48px; }
+  .p-info { padding: 20px 48px 56px; }
+  .p-img { margin: 0 48px; width: calc(100% - 96px); }
+  .coming-tag { left: 28px; }
+  .footer { padding: 72px 48px 48px; }
+  .nav-links { display: none; }
+  .nav-ham { display: flex; }
+  .hero-scroll { display: none; }
+  .footer-social { margin-left: 0; }
+}
+@media (max-width: 480px) {
+  .p-info { flex-direction: column; }
+  .footer-row { flex-direction: column; align-items: flex-start; gap: 20px; }
+}
+/* hide copy email button and divider line */
+.ecopy,
+.footer-vr { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="c-dot" id="cDot"></div>
+<div class="c-ring" id="cRing"></div>
+
+<!-- NAV ─────────────────────────────────────────── -->
+<nav id="NAV">
+  <a href="https://www.jamincassidy.com/" class="nav-logo" aria-label="Jamin Cassidy">
+    <svg class="logo-svg" viewBox="0 0 88.7 93.6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path id="logo-j" d="M1.8,4.5C1.8,2,2.4,1.3,5,1.3c9.5,0.1,18.9,0.1,28.4,0C35.5,1.4,36,2,36,4.2c-0.1,18.2,0,36.3-0.1,54.5c0,17.7-14.1,32.4-31.7,33.5c-0.7,0-1.3,0-2.4,0c0-1.1,0-2,0-3L1.8,4.5z"/>
+      <path id="logo-c" d="M44.5,43.3c-1.6,22.1,13.8,42.9,36.1,46.3c2.3,0.3,4.5,0.6,6.8,0.7V1.6C64.3,2.5,46.2,20.2,44.5,43.3z"/>
+    </svg>
+    <span class="nav-name">Jamin Cassidy</span>
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="https://www.jamincassidy.com/" class="active">Work</a></li>
+    <li><a href="https://www.jamincassidy.com/design">Design</a></li>
+    <li><a href="https://www.jamincassidy.com/about">About</a></li>
+    <li><a href="https://www.jamincassidy.com/resume">Resume</a></li>
+  </ul>
+
+  <button class="nav-ham" id="HAM" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mob" id="MOB">
+  <a href="https://www.jamincassidy.com/">Work</a>
+  <a href="https://www.jamincassidy.com/design">Design</a>
+  <a href="https://www.jamincassidy.com/about">About</a>
+  <a href="https://www.jamincassidy.com/resume">Resume</a>
+  <a href="mailto:jamincassidy@gmail.com">Contact</a>
+</div>
+
+<!--
+  WAYPOINT MAP — smooth monotonic bone → obsidian descent
+  ──────────────────────────────────────────────────────────────
+  Hero        240,237,230  fg 22,32,26   bone — dark text ✓
+  gap1        220,224,216  fg 22,32,26   gentle step toward sage grey
+  Project 01  200,210,200  fg 22,32,26   soft sage grey — dark text ✓
+  gap2        160,190,168  fg 22,32,26   mid sage — dark text ✓
+  Project 02  120,155,130  fg 22,32,26   sage green — dark text ✓
+  gap3         85,118,95   fg 240,237,230 crossover — light text
+  Project 03   55, 82, 63  fg 240,237,230 forest — light text ✓
+  gap4         42, 62, 48  fg 240,237,230 deep forest step
+  Project 04   34, 52, 42  fg 240,237,230 deep forest ✓
+  gap5         28, 42, 34  fg 240,237,230
+  Project 05   22, 32, 26  fg 240,237,230 obsidian ✓
+  gap6         22, 32, 26  fg 240,237,230 hold obsidian
+  Project 06   22, 32, 26  fg 240,237,230 coming soon — obsidian (no bounce-back)
+  gap7         22, 32, 26  fg 240,237,230
+  Footer       22, 32, 26  fg 240,237,230
+-->
+
+<!-- HERO ─────────────────────────────────────────── -->
+<section class="hero" data-bg="240,237,230" data-fg="22,32,26">
+  <p class="hero-kicker">Senior UX/UI Designer · Audubon, PA</p>
+  <h1 class="hero-h1">
+    <span class="hi-line">Hi, I'm</span>
+    <span class="name-line">Jamin Cassidy</span>
+  </h1>
+  <div class="hero-foot">
+    <p class="hero-desc">
+      I’m a User Experience Designer with a Bachelor’s degree in UX and a strong foundation in visual design and illustration. I craft digital experiences that balance usability with visual impact, driving engagement while supporting business goals. Skilled in Figma, Sketch, and Adobe Creative Suite, I bring both creative and technical expertise to every project.
+    </p>
+    <div class="hero-scroll">
+      Scroll to work
+      <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+        <path d="M7 2v10M3.5 8.5L7 12l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+</section>
+
+<!-- gap 1 -->
+<div class="p-gap" data-bg="220,224,216" data-fg="22,32,26"></div>
+
+<!-- PROJECT 01 — Interactive Site Plan ─────────────── -->
+<a href="https://www.jamincassidy.com/ispt" class="project sr"
+   data-bg="200,210,200" data-fg="22,32,26">
+  <div class="p-rule"></div>
+  <div class="p-img">
+    <img src="https://images.squarespace-cdn.com/content/v1/6294d06c699556022f970845/1727874208221-14TZF66KHE4ED531M7DM/small.jpg"
+         alt="Reimagined Interactive Site Plan" loading="lazy"/>
+  </div>
+  <div class="p-info">
+    <div>
+      <p class="p-num">01</p>
+      <h2 class="p-title">Reimagined Interactive Site Plan</h2>
+      <div class="p-tags">
+        <span class="p-tag">Interactive</span>
+        <span class="p-tag">Internal Sales Tool</span>
+        <span class="p-tag">UX Redesign</span>
+      </div>
+    </div>
+    <div class="p-arrow">↗</div>
+  </div>
+</a>
+
+<!-- gap 2 -->
+<div class="p-gap" data-bg="160,190,168" data-fg="22,32,26"></div>
+
+<!-- PROJECT 02 — Decluttering List View ─────────────── -->
+<a href="https://www.jamincassidy.com/listview" class="project sr"
+   data-bg="120,155,130" data-fg="22,32,26">
+  <div class="p-rule"></div>
+  <div class="p-img">
+    <img src="https://images.squarespace-cdn.com/content/v1/6294d06c699556022f970845/1717425982732-6TK09XH3B594MTGAMLPY/Listview.jpg"
+         alt="Decluttering List View" loading="lazy"/>
+  </div>
+  <div class="p-info">
+    <div>
+      <p class="p-num">02</p>
+      <h2 class="p-title">Decluttering List View</h2>
+      <div class="p-tags">
+        <span class="p-tag">Mobile UX Redesign</span>
+        <span class="p-tag">UI Simplification</span>
+        <span class="p-tag">UX/UI Design</span>
+      </div>
+    </div>
+    <div class="p-arrow">↗</div>
+  </div>
+</a>
+
+<!-- gap 3 -->
+<div class="p-gap" data-bg="85,118,95" data-fg="240,237,230"></div>
+
+<!-- PROJECT 03 — Brand Story ──────────────────────── -->
+<a href="https://www.jamincassidy.com/aboutpage" class="project sr"
+   data-bg="55,82,63" data-fg="240,237,230">
+  <div class="p-rule"></div>
+  <div class="p-img">
+    <img src="https://images.squarespace-cdn.com/content/v1/6294d06c699556022f970845/1715953907153-03CJKDH8OUZ844E3BXF4/6.jpg"
+         alt="Transforming Toll Brothers Brand Story" loading="lazy"/>
+  </div>
+  <div class="p-info">
+    <div>
+      <p class="p-num">03</p>
+      <h2 class="p-title">Transforming Toll Brothers Brand Story</h2>
+      <div class="p-tags">
+        <span class="p-tag">Brand Storytelling</span>
+        <span class="p-tag">Mobile-First UX</span>
+        <span class="p-tag">UX/UI Design</span>
+      </div>
+    </div>
+    <div class="p-arrow">↗</div>
+  </div>
+</a>
+
+<!-- gap 4 -->
+<div class="p-gap" data-bg="42,62,48" data-fg="240,237,230"></div>
+
+<!-- PROJECT 04 — PR Microsite ─────────────────────── -->
+<a href="https://www.jamincassidy.com/west36" class="project sr"
+   data-bg="34,52,42" data-fg="240,237,230">
+  <div class="p-rule"></div>
+  <div class="p-img">
+    <img src="https://images.squarespace-cdn.com/content/v1/6294d06c699556022f970845/1706226361515-DEGMH8DTIEU6LSIZX1ZR/10.jpg"
+         alt="Community-First PR Microsite" loading="lazy"/>
+  </div>
+  <div class="p-info">
+    <div>
+      <p class="p-num">04</p>
+      <h2 class="p-title">Community-First PR Microsite</h2>
+      <div class="p-tags">
+        <span class="p-tag">Public Engagement</span>
+        <span class="p-tag">Mobile-First UX</span>
+        <span class="p-tag">Microsite</span>
+      </div>
+    </div>
+    <div class="p-arrow">↗</div>
+  </div>
+</a>
+
+<!-- gap 5 -->
+<div class="p-gap" data-bg="28,42,34" data-fg="240,237,230"></div>
+<a href="https://www.jamincassidy.com/" class="project sr"
+   data-bg="22,32,26" data-fg="240,237,230">
+  <div class="p-rule"></div>
+  <div class="p-img">
+    <img src="https://images.squarespace-cdn.com/content/v1/6294d06c699556022f970845/dd86731e-ac32-4b5b-ba0e-ddd8fd1014b4/2500x1749.jpg"
+         alt="Virtual Staging AI" loading="lazy"/>
+  </div>
+  <div class="p-info">
+    <div>
+      <p class="p-num">05</p>
+      <h2 class="p-title">Virtual Staging AI</h2>
+      <div class="p-tags">
+        <span class="p-tag">AI Integration</span>
+        <span class="p-tag">Internal Tool</span>
+        <span class="p-tag">Desktop-First</span>
+      </div>
+    </div>
+    <div class="p-arrow">↗</div>
+  </div>
+</a>
+
+<!-- gap 6 -->
+<div class="p-gap" data-bg="22,32,26" data-fg="240,237,230"></div>
+
+<!-- PROJECT 06 — Vista Pointe ────────── -->
+<a href="https://www.jamincassidy.com/" class="project sr" data-bg="22,32,26" data-fg="240,237,230">
+  <div class="p-rule"></div>
+  <div class="p-img">
+    <img src="https://images.squarespace-cdn.com/content/v1/6294d06c699556022f970845/f79e063e-165b-4402-b5f4-95fefe1bd272/6.jpg"
+         alt="Vista Pointe" loading="lazy"/>
+  </div>
+  <div class="p-info">
+    <div>
+      <p class="p-num">06</p>
+      <h2 class="p-title">Vista Pointe</h2>
+      <div class="p-tags">
+        <span class="p-tag">Brand Story</span>
+        <span class="p-tag">Hero Animation</span>
+      </div>
+    </div>
+    <div class="p-arrow">↗</div>
+  </div>
+</a>
+
+<!-- gap 7 — bridge to dark footer -->
+<div class="p-gap" data-bg="22,32,26" data-fg="240,237,230"></div>
+
+<!-- FOOTER ──────────────────────────────────────────── -->
+<footer class="footer" data-bg="22,32,26" data-fg="240,237,230">
+  <div class="footer-rule"></div>
+  <p class="footer-eyebrow">Let's connect</p>
+  <h2 class="footer-hed">
+    <span class="muted">Let's</span><br>work together
+  </h2>
+  <div class="footer-row">
+    <a href="mailto:jamincassidy@gmail.com" class="btn-contact">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <rect x="1" y="3" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M1 4.5l6 3.8 6-3.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      Get in touch
+    </a>
+     <a href="https://linkedin.com/in/jamincassidy" target="_blank" rel="noopener" class="btn-contact">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M4.5 6v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <circle cx="4.5" cy="4.5" r=".6" fill="currentColor"/>
+        <path d="M7 10V7.5A1.5 1.5 0 0 1 10 7.5V10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      LinkedIn
+    </a>
+    <button class="ecopy" id="EC" aria-label="Copy email address">
+      <span class="ec-off">Copy email</span>
+      <span class="ec-on">Copied ✓</span>
+    </button>
+    <div class="footer-vr"></div>
+    <!--
+    <nav class="footer-social" aria-label="Social">
+      <a href="https://linkedin.com/in/jamincassidy" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M4.5 6v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          <circle cx="4.5" cy="4.5" r=".6" fill="currentColor"/>
+          <path d="M7 10V7.5A1.5 1.5 0 0 1 10 7.5V10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        LinkedIn
+      </a>
+    </nav>-->
+  </div>
+  <div class="footer-bot">
+    <p>© 2026 Jamin Cassidy</p>
+    <p>UX/UI · Visual Design · Illustration · Branding</p>
+  </div>
+</footer>
+
+<script>
+'use strict';
+
+/* ── palette as RGB arrays ─────────────────────── */
+const P = {
+  s0: [240,237,230],  // #F0EDE6  bone
+  s1: [214,217,207],  // #D6D9CF  light sage grey
+  s2: [78,122,92],    // #4E7A5C  sage green (dark accent — AA on light bg)
+  sL: [143,191,160],  // #8FBFA0  light sage (AA on dark bg ~4.6:1 on obsidian)
+  s3: [45,74,53],     // #2D4A35  forest green
+  s4: [30,50,40],     // #1E3228  deep forest
+  s5: [22,32,26],     // #16201A  obsidian
+};
+
+/* ── cursor ─────────────────────────────────────── */
+const cDot  = document.getElementById('cDot');
+const cRing = document.getElementById('cRing');
+let mx=0, my=0, rx=0, ry=0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cDot.style.left = mx+'px'; cDot.style.top = my+'px';
+});
+document.querySelectorAll('a,button').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('hov'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('hov'));
+});
+
+/* ── color system ───────────────────────────────── */
+const NAV   = document.getElementById('NAV');
+const MOB   = document.getElementById('MOB');
+const logoJ = document.getElementById('logo-j');
+const logoC = document.getElementById('logo-c');
+
+const wps = Array.from(document.querySelectorAll('[data-bg]')).map(el => ({
+  el,
+  bg: el.dataset.bg.split(',').map(Number),
+  fg: el.dataset.fg.split(',').map(Number),
+}));
+
+let S = { bg:[...P.s0], fg:[...P.s5], na:0 };
+let T = { bg:[...P.s0], fg:[...P.s5], na:0 };
+
+const lp   = (a,b,t) => a+(b-a)*t;
+const lpC  = (a,b,t) => a.map((v,i)=>lp(v,b[i],t));
+const rgb  = c => `rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;
+const rgba = (c,a) => `rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a.toFixed(3)})`;
+const ss   = t => t*t*(3-2*t);
+const ZONE = 500;
+
+/* WCAG relative luminance */
+const lum = ([r,g,b]) => {
+  return [r,g,b].map(v=>{
+    v/=255;
+    return v<=.03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4);
+  }).reduce((s,v,i)=>s+[.2126,.7152,.0722][i]*v, 0);
+};
+const cr = (a,b) => {
+  const la=lum(a), lb=lum(b);
+  return (Math.max(la,lb)+.05)/(Math.min(la,lb)+.05);
+};
+
+/* pick logo path colors readable against current bg
+   Light bg → J: obsidian #16201A  |  C: sage #4E7A5C
+   Dark bg  → J: bone #F0EDE6      |  C: light sage #8FBFA0
+   Crossover determined by bg luminance midpoint             */
+function logoFills(bg) {
+  const bgLum = lum(bg);
+  const isLight = bgLum > 0.18; // ~midpoint between bone and mid-sage
+
+  if (isLight) {
+    return { j: rgb(P.s5), c: rgb(P.s2) }; // obsidian J + sage C
+  } else {
+    return { j: rgb(P.s0), c: rgb(P.sL) }; // bone J + light sage C
+  }
+}
+
+function computeT() {
+  const sy    = window.scrollY;
+  const probe = sy + window.innerHeight * 0.25;
+  let from = wps[0], to = wps[0], t = 0;
+
+  for (let i=0; i<wps.length; i++) {
+    if (wps[i].el.offsetTop <= probe) {
+      from = wps[i];
+      const next = wps[i+1];
+      if (next) {
+        const dist = next.el.offsetTop - probe;
+        if (dist>=0 && dist<ZONE) { to=next; t=ss(1-dist/ZONE); }
+      }
+    }
+  }
+  T.bg = lpC(from.bg, to.bg, t);
+  T.fg = lpC(from.fg, to.fg, t);
+  T.na = Math.min(sy/60, 1) * .9;
+}
+
+function applyS() {
+  S.bg = lpC(S.bg, T.bg, .045);
+  S.fg = lpC(S.fg, T.fg, .055);
+  S.na = lp(S.na, T.na, .10);
+
+  document.documentElement.style.background = rgb(S.bg);
+  document.body.style.color                 = rgb(S.fg);
+
+  /* Nav always gets fully opaque bg — prevents scroll bleed behind logo & name */
+  NAV.style.background = rgb(S.bg);
+  NAV.style.color      = rgb(S.fg);
+  /* Add blur + border only after scrolling starts */
+  NAV.classList.toggle('scrolled', S.na > .01);
+
+  MOB.style.background = rgb(S.bg);
+  MOB.style.color      = rgb(S.fg);
+  cDot.style.background   = rgb(S.fg);
+  cRing.style.borderColor = rgba(S.fg, .18);
+
+  const fills = logoFills(S.bg.map(v=>v|0));
+  logoJ.style.fill = fills.j;
+  logoC.style.fill = fills.c;
+}
+
+window.addEventListener('scroll', computeT, {passive:true});
+window.addEventListener('resize', computeT, {passive:true});
+computeT();
+
+(function tick(){
+  rx += (mx-rx)*.11;
+  ry += (my-ry)*.11;
+  cRing.style.left = rx+'px';
+  cRing.style.top  = ry+'px';
+  applyS();
+  requestAnimationFrame(tick);
+})();
+
+/* ── mobile nav ──────────────────────────────────── */
+document.getElementById('HAM').addEventListener('click', ()=>{
+  document.getElementById('MOB').classList.toggle('open');
+});
+
+/* ── email copy ──────────────────────────────────── */
+document.getElementById('EC').addEventListener('click', function(){
+  navigator.clipboard.writeText('jamincassidy@gmail.com').then(()=>{
+    this.classList.add('done');
+    setTimeout(()=>this.classList.remove('done'), 2600);
+  });
+});
+
+/* ── scroll reveal ───────────────────────────────── */
+(function(){
+  const obs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); obs.unobserve(e.target); }});
+  },{threshold:.05});
+  document.querySelectorAll('.sr').forEach(el=>obs.observe(el));
+})();
+</script>
+</body>
+</html>
